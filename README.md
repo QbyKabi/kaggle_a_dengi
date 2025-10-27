@@ -5,28 +5,27 @@
 ## Структура репозитория
 ```
 kaggle_a_dengi/
-├─ app.py                 # FastAPI-сервис
-├─ database.py            # подключение к БД (SQLAlchemy)
-├─ schema.py              # Pydantic-схемы ответов
-├─ solution.py            # вспомогательная загрузка модели
-├─ table_user.py          # ORM-модель таблицы пользователей
-├─ table_post.py          # ORM-модель таблицы постов
-├─ table_feed.py          # ORM-модель таблицы действий
-├─ requirements.txt
 ├─ notebooks/
-│  ├─ final_project_model.ipynb   # обучение CatBoost + бейзлайны
-│  └─ img/
-│     ├─ pr_curve.png
-│     └─ roc_curve.png
-└─ models/
-   └─ README.md                   # как получить файл модели
+│ ├─ a_dengi_final.ipynb
+│ └─ img/
+│   ├─ roc_curve.png
+│   ├─ pr_curve.png
+│   └─ f1.png
+├─ data/
+│ └─ README.md
+├─ models/
+│ └─ catboost_best_model.cbm
+├─ requirements.txt
+├─ README.md
+├─ .gitignore
+└─ LICENCE
 ```
 
 ## Запуск
 1. Установить зависимости
     ```
    pip install -r requirements.txt
-2. Запустить сервис
+2. Открыть ноутбук
       ```
       jupyter notebook notebooks/a_dengi_final.ipynb
 
@@ -44,57 +43,64 @@ kaggle_a_dengi/
     
     - поиск оптимального порога threshold по метрике F1
   
+## Требования
+```
+python=3.11
+pandas
+numpy
+matplotlib
+scikit-learn
+catboost
+rapidfuzz
+```
+  
 ## Этапы работ
 
-1. Загрузка и первичная обработка
+1. **Загрузка и первичная обработка**
 
-  - Загрузка датасетов
+     - Загрузка датасетов
 
-  - Проверка типов данных, оптимизация памяти с помощью astype
+     - Проверка типов данных, оптимизация памяти с помощью astype
 
-  - Преобразование дат в timestamp
+     - Преобразование дат в timestamp
 
-2. Работа с пропусками
+2. **Работа с пропусками**
 
-  - Заполнение медианой или групповой медианой.
+     - Заполнение медианой или групповой медианой.
 
-  - Признаки без данных заполнены нулями.
+     - Признаки без данных заполнены нулями.
 
-3. Feature Engineering
+3. **Feature Engineering**
    
-  - Преобразование регионов с помощью fuzzy matching (rapidfuzz), чтобы нормализовать значения городов.
+     - Преобразование регионов с помощью fuzzy matching (rapidfuzz), чтобы нормализовать значения городов.
 
-  - Генерация новых признаков:
+     - Генерация новых признаков:
 
-    - payment_to_income_ratio — отношение платежа к доходу.
+          - payment_to_income_ratio — отношение платежа к доходу.
 
-    - overdue_ratio — доля просроченных платежей.
+          - overdue_ratio — доля просроченных платежей.
 
-    - approval_ratio — отношение одобренной суммы к запрошенной.
+          - approval_ratio — отношение одобренной суммы к запрошенной.
 
-    - risk_score — агрегированный риск.
+          - risk_score — агрегированный риск.
 
-    - total_debt_burden, disposable_income_ratio — оценка долговой нагрузки.
+          - total_debt_burden, disposable_income_ratio — оценка долговой нагрузки.
 
-    - Группировка по client_id для извлечения агрегированных метрик (avg_approved_amount, total_loans, total_contacts и др.).
+          - Группировка по client_id для извлечения агрегированных метрик (avg_approved_amount, total_loans, total_contacts и др.).
 
-4. Кодирование категориальных признаков
+4. **Моделирование**
 
-  ## Использован LabelEncoder для некоторых категориальных признаков.
+   - Использован GridSearchCV с 3-фолд кросс-валидацией
 
-5. Моделирование
+   - Целевая метрика — F1-score.
 
-- Использован GridSearchCV с 3-фолд кросс-валидацией
+   - Основная модель: `CatBoostClassifier`.
 
-- Целевая метрика — F1-score.
+   - Разделение на train/test с фиксированным `seed` для воспроизводимости.
 
-- Основная модель: `CatBoostClassifier`.
+5. **Подбор порога**
 
-- Разделение на train/test с фиксированным `seed` для воспроизводимости.
-
-6. Подбор порога
-
-После обучения подобран оптимальный threshold:
+   После обучения подобран оптимальный threshold:
 ```
 best F1(valid) = 0.8965 @ thr = 0.57
 ```
@@ -102,7 +108,7 @@ best F1(valid) = 0.8965 @ thr = 0.57
 ## Результаты
 
 Ниже — графики ROC, PR, F1
-.
+
 Численные значения метрик вынесены в легенды:
 
 **Графики ROC, PR, F1**
